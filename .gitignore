@@ -1,0 +1,47 @@
+# ROS2 build artifacts
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+
+# Dataset and model checkpoints (large binary files)
+data/episodes/*.hdf5
+data/models/*.pt
+data/models/*.onnx
+data/models/*.pth
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+.eggs/
+.venv/
+venv/
+*.egg
+
+# Training artifacts
+training/runs/
+training/wandb/
+training/outputs/
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.docker/
+
+# Keep empty data directories tracked
+!data/episodes/.gitkeep
+!data/models/.gitkeep

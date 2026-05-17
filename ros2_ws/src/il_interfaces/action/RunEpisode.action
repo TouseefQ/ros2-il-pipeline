@@ -1,0 +1,14 @@
+# Goal
+string policy_checkpoint
+uint32 max_steps
+float32 control_hz
+---
+# Result
+bool success
+uint32 steps_executed
+string message
+---
+# Feedback
+uint32 current_step
+float32[] current_joint_pos
+float32 completion_ratio

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>il_inference</name>
+  <version>0.1.0</version>
+  <description>ROS2 inference node — loads a trained IL policy and publishes joint commands</description>
+  <maintainer email="touseefqamar1@gmail.com">Touseef Qamar</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <depend>rclpy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>trajectory_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>il_interfaces</depend>
+
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-cv-bridge</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

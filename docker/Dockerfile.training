@@ -1,0 +1,18 @@
+# Training image — CPU by default, GPU-capable when run with NVIDIA runtime
+FROM pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    libhdf5-dev \
+    libopencv-dev \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY training/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+WORKDIR /workspace
+VOLUME ["/workspace/data", "/workspace/training"]
+
+CMD ["bash"]

@@ -1,0 +1,8 @@
+# Begin recording a new episode
+string episode_id       # leave empty to auto-generate
+string collection_mode  # "teleop" | "kinesthetic" | "scripted"
+bool record_images      # override config; false = state-only
+---
+bool success
+string episode_id
+string message

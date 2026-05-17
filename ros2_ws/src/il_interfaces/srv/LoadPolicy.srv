@@ -1,0 +1,8 @@
+# Load a trained policy checkpoint into the inference node
+string checkpoint_path
+string algorithm   # "bc" | "act" | "diffusion"
+---
+bool success
+string message
+uint32 num_joints
+string algorithm

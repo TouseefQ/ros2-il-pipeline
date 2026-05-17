@@ -1,0 +1,11 @@
+torch>=2.1.0
+numpy>=1.24
+h5py>=3.9
+opencv-python-headless>=4.8
+pyyaml>=6.0
+scipy>=1.11
+tqdm>=4.66
+einops>=0.7          # used by ACT transformer
+timm>=0.9            # vision encoders for ACT/Diffusion Policy
+matplotlib>=3.7      # training curves
+tensorboard>=2.14    # optional — comment out if not using

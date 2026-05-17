@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>il_pipeline_bringup</name>
+  <version>0.1.0</version>
+  <description>Launch files and top-level configuration for the IL pipeline</description>
+  <maintainer email="touseefqamar1@gmail.com">Touseef Qamar</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+
+  <depend>rclpy</depend>
+  <depend>il_interfaces</depend>
+  <depend>il_data_collection</depend>
+  <depend>il_webserver_bridge</depend>
+  <depend>il_inference</depend>
+
+  <exec_depend>moveit_resources_panda_moveit_config</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher_gui</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+
+  <export>
+    <build_type>ament_cmake_python</build_type>
+  </export>
+</package>

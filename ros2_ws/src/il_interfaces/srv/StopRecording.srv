@@ -1,0 +1,7 @@
+# Stop the active recording
+bool save   # false = discard episode without writing to disk
+---
+bool success
+string episode_id
+uint32 num_steps
+string message

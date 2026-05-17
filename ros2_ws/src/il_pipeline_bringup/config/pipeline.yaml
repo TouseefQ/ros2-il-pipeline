@@ -1,0 +1,44 @@
+il_pipeline:
+  robot:
+    # Panda URDF shipped with moveit_resources — swap for your own robot here
+    urdf_package: "moveit_resources_panda_description"
+    urdf_file: "urdf/panda.urdf"
+    joint_names:
+      - panda_joint1
+      - panda_joint2
+      - panda_joint3
+      - panda_joint4
+      - panda_joint5
+      - panda_joint6
+      - panda_joint7
+    gripper_joint_names:
+      - panda_finger_joint1
+      - panda_finger_joint2
+    eef_link: "panda_link8"
+    num_joints: 7
+
+  data_collection:
+    output_dir: "/data/episodes"
+    # Set to true to include raw camera images in each episode HDF5
+    record_images: false
+    image_cameras:
+      - topic: "/camera/wrist/image_raw"
+        name: "camera_wrist"
+      - topic: "/camera/top/image_raw"
+        name: "camera_top"
+    image_size: [128, 128]   # resize before writing (H x W)
+    recording_hz: 10.0       # observation sampling rate
+    max_episode_steps: 500
+
+  webserver:
+    host: "localhost"
+    port: 9000
+    username: "admin"
+    password: "mybotshop"
+    reconnect_interval_s: 5.0
+
+  inference:
+    default_checkpoint: ""
+    default_algorithm: "bc"   # "bc" | "act" | "diffusion"
+    control_hz: 10.0
+    action_chunk_size: 10     # ACT: number of steps predicted per forward pass
