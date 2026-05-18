@@ -14,7 +14,7 @@ Teleoperation → Episode Collection → HDF5 Dataset → Training (BC / ACT) �
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│              MyBotShop Robotic Webserver                 │
+│              MyBotShop Robotic Webserver                │
 │  (port 9000 · WebSocket · Custom Actions · Teleop UI)   │
 └──────────────┬──────────────────────┬───────────────────┘
                │ WebSocket            │ WebSocket
