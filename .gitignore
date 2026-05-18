@@ -42,6 +42,12 @@ Thumbs.db
 # Docker
 .docker/
 
+# Progress documentation - No need to commit
+docs/
+
+# Closed-source webserver platform — never push
+robot_webserver/
+
 # Keep empty data directories tracked
 !data/episodes/.gitkeep
 !data/models/.gitkeep

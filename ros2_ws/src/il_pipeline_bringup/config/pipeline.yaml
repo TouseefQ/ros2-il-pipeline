@@ -1,6 +1,7 @@
 il_pipeline:
   robot:
     # Panda URDF shipped with moveit_resources — swap for your own robot here
+    name: "panda"
     urdf_package: "moveit_resources_panda_description"
     urdf_file: "urdf/panda.urdf"
     joint_names:
@@ -15,6 +16,7 @@ il_pipeline:
       - panda_finger_joint1
       - panda_finger_joint2
     eef_link: "panda_link8"
+    base_frame: "world"      # TF2 reference frame for end-effector pose lookup
     num_joints: 7
 
   data_collection:
