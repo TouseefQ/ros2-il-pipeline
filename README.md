@@ -13,48 +13,60 @@ Teleoperation → Episode Collection → HDF5 Dataset → Training (BC / ACT) �
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│              MyBotShop Robotic Webserver                │
-│  (port 9000 · WebSocket · Custom Actions · Teleop UI)   │
-└──────────────┬──────────────────────┬───────────────────┘
-               │ WebSocket            │ WebSocket
-               ▼                      ▼
-┌──────────────────────┐  ┌──────────────────────────────┐
-│  teleop_bridge_node  │  │  webserver_action_node       │
-│  (joystick → joint   │  │  (buttons → start/stop rec,  │
-│   commands)          │  │   load policy, mode switch)  │
-└──────────┬───────────┘  └──────────────┬───────────────┘
-           │                             │
-           ▼                             ▼
-┌──────────────────────────────────────────────────────────┐
-│                     ROS2 Core Bus                        │
-│  /joint_states  /gripper_state  /camera/*/image_raw  /tf │
-└──┬───────────────────────┬──────────────────────┬────────┘
-   │                       │                      │
-   ▼                       ▼                      ▼
-┌─────────────┐  ┌──────────────────┐  ┌──────────────────┐
-│ data_       │  │ dataset_manager_ │  │ il_inference_    │
-│ collector_  │  │ node             │  │ node             │
-│ node        │  │ (episode index,  │  │ (loads policy,   │
-│ (records    │  │  stats, export)  │  │  obs → action,   │
-│  HDF5 eps)  │  └────────┬─────────┘  │  publishes cmds) │
-└─────────────┘           │            └──────────────────┘
-                          ▼
-             ┌────────────────────────┐
-             │  data/episodes/*.hdf5  │
-             └────────────┬───────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                MyBotShop Robotic Webserver                   │
+│  port 9000 (UI)  ·  port 9001 (IK WebSocket broadcast)      │
+└───────────────────────────┬──────────────────────────────────┘
+                            │ ws://host:9001
+                            │ (IK joint solution broadcasts)
+                            ▼
+               ┌────────────────────────┐
+               │   teleop_bridge_node   │
+               │   (joint solutions →   │
+               │    /joint_commands,    │
+               │    fingers →           │
+               │    /gripper_command)   │
+               └────────────┬───────────┘
+
+ Browser tab ──────────────────────────────────────────────────
+ http://localhost:9010        │
+               ┌──────────────────────────┐
+               │   webserver_action_node  │
+               │   (HTTP server port 9010 │
+               │    → start/stop rec,     │
+               │      load policy)        │
+               └────────────┬─────────────┘
+                            │  services / topics
+                            ▼
+┌──────────────────────────────────────────────────────────────┐
+│                       ROS2 Core Bus                          │
+│   /joint_states  /gripper_state  /camera/*/image_raw  /tf    │
+└──┬────────────────────────┬──────────────────────┬───────────┘
+   │                        │                      │
+   ▼                        ▼                      ▼
+┌──────────────┐  ┌──────────────────┐  ┌──────────────────┐
+│ data_        │  │ dataset_manager_ │  │ il_inference_    │
+│ collector_   │  │ node             │  │ node             │
+│ node         │  │ (episode index,  │  │ (loads policy,   │
+│ (records     │  │  stats)          │  │  obs → action,   │
+│  HDF5 eps)   │  └────────┬─────────┘  │  publishes cmds) │
+└──────────────┘           │            └──────────────────┘
+                           ▼
+            ┌──────────────────────────┐
+            │  data/episodes/*.hdf5    │
+            └─────────────┬────────────┘
                           │
                           ▼
-             ┌────────────────────────┐
-             │   Training Pipeline    │
-             │   train_bc.py          │
-             │   train_act.py         │
-             └────────────┬───────────┘
+            ┌──────────────────────────┐
+            │   Training Pipeline      │
+            │   train_bc.py            │
+            │   train_act.py           │
+            └─────────────┬────────────┘
                           │  checkpoints
                           ▼
-             ┌────────────────────────┐
-             │   data/models/*.pt     │
-             └────────────────────────┘
+            ┌──────────────────────────┐
+            │   data/models/*.pt       │
+            └──────────────────────────┘
 ```
 
 ---
@@ -208,14 +220,13 @@ ep_000.hdf5
 
 ## Webserver Integration
 
-The pipeline is designed to connect to the MyBotShop Robotic Webserver (port 9000) via WebSocket.
-When webserver access is available:
+The pipeline integrates with the MyBotShop Robotic Webserver as a **pure client** — no webserver source files are modified.
 
-- `teleop_bridge_node` connects to `ws://<host>:9000/ws/teleop` and translates joystick commands
-- `webserver_action_node` connects to the action endpoint and maps custom buttons to pipeline services
-- Camera feeds from the webserver are re-published as ROS2 image topics
+**Teleoperation** (`teleop_bridge_node`): connects as a WebSocket client to the IK solver broadcast endpoint (`ws://<host>:9001`). Every joint solution the IK server computes is forwarded to `/joint_commands`; finger/gripper broadcasts are forwarded to `/gripper_command`.
 
-Without webserver access, all pipeline nodes work standalone via direct ROS2 service calls.
+**Pipeline control** (`webserver_action_node`): hosts its own minimal HTTP control panel on port 9010. Open `http://localhost:9010` in a browser tab alongside the webserver UI to start/stop recording, discard an episode, or load a policy checkpoint. No webserver-side modifications are needed — the panel talks directly to ROS2 services.
+
+Without the webserver, all nodes work standalone via direct ROS2 service calls (see Quick Start).
 
 ---
 
@@ -224,8 +235,8 @@ Without webserver access, all pipeline nodes work standalone via direct ROS2 ser
 | Stage | Focus | Status |
 |-------|-------|--------|
 | 1 | Foundation — workspace, interfaces, Docker, skeletons | ✅ Done |
-| 2 | Data collection — HDF5 writer, recorder implementation | 🔜 Next |
-| 3 | Webserver bridge — WebSocket client, action routing | ⏳ Pending |
+| 2 | Data collection — HDF5 writer, recorder implementation | ✅ Done |
+| 3 | Webserver bridge — IK WS client, HTTP control panel | ✅ Done |
 | 4 | Dataset tooling — viewer, stats, LeRobot export | ⏳ Pending |
 | 5 | BC training — dataset loader, policy, training loop | ⏳ Pending |
 | 6 | Inference node — policy loader, control loop | ⏳ Pending |
@@ -246,6 +257,7 @@ Without webserver access, all pipeline nodes work standalone via direct ROS2 ser
 | `/il/observation_frame` | `il_interfaces/ObservationFrame` | pub |
 | `/il/episode_status` | `std_msgs/String` | pub |
 | `/il/dataset_stats` | `std_msgs/String` (JSON) | pub |
+| `/il/pipeline_control` | `std_msgs/String` (JSON) | pub |
 | `/data_collector/start_recording` | `il_interfaces/srv/StartRecording` | srv |
 | `/data_collector/stop_recording` | `il_interfaces/srv/StopRecording` | srv |
 | `/il_inference/load_policy` | `il_interfaces/srv/LoadPolicy` | srv |

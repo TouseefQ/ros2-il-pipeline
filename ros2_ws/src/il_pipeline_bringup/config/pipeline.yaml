@@ -35,9 +35,12 @@ il_pipeline:
   webserver:
     host: "localhost"
     port: 9000
+    ik_ws_port: 9001          # IK solver WebSocket (broadcasts joint solutions)
+    action_server_port: 9010  # Our own HTTP control panel port
     username: "admin"
     password: "mybotshop"
     reconnect_interval_s: 5.0
+    gripper_max_position: 0.04  # metres (Panda finger travel range)
 
   inference:
     default_checkpoint: ""
