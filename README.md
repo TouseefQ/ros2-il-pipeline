@@ -15,7 +15,7 @@ Teleoperation → Episode Collection → HDF5 Dataset → Training (BC / ACT) �
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                MyBotShop Robotic Webserver                   │
-│  port 9000 (UI)  ·  port 9001 (IK WebSocket broadcast)      │
+│  port 9000 (UI)  ·  port 9001 (IK WebSocket broadcast)       │
 └───────────────────────────┬──────────────────────────────────┘
                             │ ws://host:9001
                             │ (IK joint solution broadcasts)
@@ -27,9 +27,9 @@ Teleoperation → Episode Collection → HDF5 Dataset → Training (BC / ACT) �
                │    fingers →           │
                │    /gripper_command)   │
                └────────────┬───────────┘
-
- Browser tab ──────────────────────────────────────────────────
- http://localhost:9010        │
+                            │
+ Browser tab ───────────────│──────────────────────────────────
+ http://localhost:9010      ▼
                ┌──────────────────────────┐
                │   webserver_action_node  │
                │   (HTTP server port 9010 │
