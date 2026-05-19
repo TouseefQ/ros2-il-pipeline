@@ -164,12 +164,20 @@ ros2 service call /data_collector/stop_recording \
 cd training
 pip install -r requirements.txt
 
-# Behavior Cloning
-python train_bc.py --episodes_dir ../data/episodes/
+# Behavior Cloning (state-only MLP, default)
+python train_bc.py --config configs/bc_config.yaml \
+                   --episodes_dir ../data/episodes/
 
-# ACT
+# Override checkpoint directory
+python train_bc.py --episodes_dir ../data/episodes/ \
+                   --checkpoint_dir ../data/models/
+
+# ACT (Stage 7)
 python train_act.py --episodes_dir ../data/episodes/
 ```
+
+Checkpoints are saved to `data/models/` as `best.pt`, `epoch_NNNN.pt`, and `final.pt`.
+Each checkpoint bundles the normalizer so the inference node needs no training data at runtime.
 
 ### 5. Run inference
 
@@ -238,7 +246,7 @@ Without the webserver, all nodes work standalone via direct ROS2 service calls (
 | 2 | Data collection — HDF5 writer, recorder implementation | ✅ Done |
 | 3 | Webserver bridge — IK WS client, HTTP control panel | ✅ Done |
 | 4 | Dataset tooling — viewer, stats, LeRobot export | ✅ Done |
-| 5 | BC training — dataset loader, policy, training loop | ⏳ Pending |
+| 5 | BC training — dataset loader, policy, training loop | ✅ Done |
 | 6 | Inference node — policy loader, control loop | ⏳ Pending |
 | 7 | ACT training — transformer model, chunked prediction | ⏳ Pending |
 | 8 | Integration & demo | ⏳ Pending |
