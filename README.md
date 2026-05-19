@@ -237,7 +237,7 @@ Without the webserver, all nodes work standalone via direct ROS2 service calls (
 | 1 | Foundation — workspace, interfaces, Docker, skeletons | ✅ Done |
 | 2 | Data collection — HDF5 writer, recorder implementation | ✅ Done |
 | 3 | Webserver bridge — IK WS client, HTTP control panel | ✅ Done |
-| 4 | Dataset tooling — viewer, stats, LeRobot export | ⏳ Pending |
+| 4 | Dataset tooling — viewer, stats, LeRobot export | ✅ Done |
 | 5 | BC training — dataset loader, policy, training loop | ⏳ Pending |
 | 6 | Inference node — policy loader, control loop | ⏳ Pending |
 | 7 | ACT training — transformer model, chunked prediction | ⏳ Pending |
