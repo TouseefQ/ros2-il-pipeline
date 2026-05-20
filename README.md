@@ -248,7 +248,7 @@ Without the webserver, all nodes work standalone via direct ROS2 service calls (
 | 4 | Dataset tooling — viewer, stats, LeRobot export | ✅ Done |
 | 5 | BC training — dataset loader, policy, training loop | ✅ Done |
 | 6 | Inference node — policy loader, control loop | ✅ Done |
-| 7 | ACT training — transformer model, chunked prediction | ⏳ Pending |
+| 7 | ACT training — transformer model, chunked prediction | ✅ Done |
 | 8 | Integration & demo | ⏳ Pending |
 
 ---

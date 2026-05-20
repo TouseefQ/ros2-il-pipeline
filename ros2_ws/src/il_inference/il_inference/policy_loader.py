@@ -154,11 +154,62 @@ class BCPolicyLoader(PolicyLoader):
 
 
 class ACTPolicyLoader(PolicyLoader):
-    """Placeholder — ACT inference implemented in Stage 7."""
+    """Wraps a trained ACTPolicy checkpoint."""
+
+    def __init__(self, config: PolicyConfig, model, normalizer) -> None:
+        super().__init__(config)
+        self._model = model
+        self._normalizer = normalizer
 
     @classmethod
     def _from_ckpt(cls, ckpt: dict, path: str) -> 'ACTPolicyLoader':
-        raise NotImplementedError('ACT inference — Stage 7')
+        from datasets.dataset_loader import Normalizer   # noqa: PLC0415
+        from models.act_policy import ACTPolicy          # noqa: PLC0415
+
+        config     = ckpt['config']
+        mcfg       = config['model']
+        dcfg       = config['data']
+        num_joints = ckpt.get('num_joints', mcfg.get('joint_input_dim', 7))
+        chunk_size = ckpt.get('chunk_size', dcfg.get('chunk_size', 10))
+
+        normalizer = Normalizer.from_state_dict(ckpt['normalizer'])
+        model = ACTPolicy(
+            num_joints=num_joints,
+            latent_dim=mcfg.get('latent_dim', 32),
+            chunk_size=chunk_size,
+            d_model=mcfg.get('d_model', 256),
+            nhead=mcfg.get('nhead', 8),
+            num_encoder_layers=mcfg.get('num_encoder_layers', 4),
+            num_decoder_layers=mcfg.get('num_decoder_layers', 7),
+            dim_feedforward=mcfg.get('dim_feedforward', 2048),
+            dropout=mcfg.get('dropout', 0.1),
+            use_images=mcfg.get('use_images', False),
+        )
+        model.load_state_dict(ckpt['model_state'])
+        model.eval()
+
+        pcfg = PolicyConfig(
+            algorithm='act',
+            num_joints=num_joints,
+            uses_images=mcfg.get('use_images', False),
+            action_chunk_size=chunk_size,
+            checkpoint_path=str(path),
+        )
+        return cls(pcfg, model, normalizer)
 
     def predict(self, obs: dict) -> np.ndarray:
-        raise NotImplementedError('ACT inference — Stage 7')
+        """Normalize obs → model (z=0) → return first step of chunk, denormalized."""
+        import torch  # noqa: PLC0415
+
+        # Normalize and batch state observations
+        tensor_obs = {}
+        for key in ('joint_pos', 'joint_vel', 'eef_pos', 'eef_quat'):
+            val = self._normalizer.normalize(key, obs[key])
+            tensor_obs[key] = torch.from_numpy(val).unsqueeze(0)   # (1, D)
+
+        with torch.no_grad():
+            # pred_chunk: (1, chunk_size, num_joints)
+            pred_chunk = self._model.predict(tensor_obs)   # (chunk_size, num_joints)
+
+        first_action = pred_chunk[0].numpy()               # (num_joints,)
+        return self._normalizer.denormalize('action', first_action)
