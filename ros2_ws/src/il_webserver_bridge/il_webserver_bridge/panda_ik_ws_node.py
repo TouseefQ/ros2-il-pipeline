@@ -44,7 +44,7 @@ class PandaIKWSNode(Node):
         self._lock = threading.Lock()
         self._latest: Optional[str] = None
         self._loop: Optional[asyncio.AbstractEventLoop] = None
-        self._clients: set = set()
+        self._ws_clients: set = set()
 
         self.create_subscription(
             JointState, '/joint_states', self._on_joint_state, 10
@@ -68,7 +68,7 @@ class PandaIKWSNode(Node):
         with self._lock:
             self._latest = payload
 
-        if self._loop is not None and self._clients:
+        if self._loop is not None and self._ws_clients:
             self._loop.call_soon_threadsafe(self._schedule_broadcast, payload)
 
     def _schedule_broadcast(self, payload: str) -> None:
@@ -76,17 +76,17 @@ class PandaIKWSNode(Node):
 
     async def _broadcast(self, payload: str) -> None:
         dead: set = set()
-        for ws in set(self._clients):
+        for ws in set(self._ws_clients):
             try:
                 await ws.send(payload)
             except Exception:
                 dead.add(ws)
-        self._clients -= dead
+        self._ws_clients -= dead
 
     async def _handler(self, websocket) -> None:
         addr = getattr(websocket, 'remote_address', '?')
         self.get_logger().info(f'WebSocket client connected: {addr}')
-        self._clients.add(websocket)
+        self._ws_clients.add(websocket)
         try:
             with self._lock:
                 latest = self._latest
@@ -97,7 +97,7 @@ class PandaIKWSNode(Node):
         except Exception:
             pass
         finally:
-            self._clients.discard(websocket)
+            self._ws_clients.discard(websocket)
             self.get_logger().info(f'WebSocket client disconnected: {addr}')
 
     async def run_server(self) -> None:
