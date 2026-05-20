@@ -186,6 +186,28 @@ ros2 launch il_pipeline_bringup inference.launch.py \
   checkpoint:=/data/models/bc_v1.pt algorithm:=bc
 ```
 
+### 6. Run full pipeline (all nodes in one command)
+
+```bash
+# Collection mode — no policy loaded yet
+ros2 launch il_pipeline_bringup full_pipeline.launch.py
+
+# With a trained BC policy auto-loaded
+ros2 launch il_pipeline_bringup full_pipeline.launch.py \
+  checkpoint:=/data/models/best.pt \
+  algorithm:=bc \
+  training_src_dir:=/path/to/ros2-il-pipeline/training
+
+# With ACT policy
+ros2 launch il_pipeline_bringup full_pipeline.launch.py \
+  checkpoint:=/data/models/act_best.pt \
+  algorithm:=act \
+  training_src_dir:=/path/to/ros2-il-pipeline/training
+```
+
+This starts: MoveIt2 Panda simulator · data collector · dataset manager ·
+webserver bridge (teleop + HTTP panel) · inference node.
+
 ---
 
 ## Simulator
@@ -249,7 +271,7 @@ Without the webserver, all nodes work standalone via direct ROS2 service calls (
 | 5 | BC training — dataset loader, policy, training loop | ✅ Done |
 | 6 | Inference node — policy loader, control loop | ✅ Done |
 | 7 | ACT training — transformer model, chunked prediction | ✅ Done |
-| 8 | Integration & demo | ⏳ Pending |
+| 8 | Integration & demo — full launch, CI | ✅ Done |
 
 ---
 

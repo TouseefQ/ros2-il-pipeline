@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── ROS2 workspace build ───────────────────────────────────────────────────
+  build:
+    name: colcon build (ROS2 Humble)
+    runs-on: ubuntu-22.04
+    container:
+      image: ros:humble
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Python deps for nodes
+        run: |
+          apt-get update -q
+          apt-get install -y --no-install-recommends \
+            python3-pip \
+            ros-humble-moveit-resources-panda-moveit-config \
+            ros-humble-moveit-resources-panda-description
+          pip3 install --quiet websocket-client h5py
+
+      - name: Build workspace
+        shell: bash
+        run: |
+          . /opt/ros/humble/setup.bash
+          cd ros2_ws
+          colcon build --symlink-install \
+            --cmake-args -DCMAKE_BUILD_TYPE=Release \
+            --event-handlers console_cohesion+
+
+      - name: Verify all packages built
+        shell: bash
+        run: |
+          . /opt/ros/humble/setup.bash
+          . ros2_ws/install/setup.bash
+          ros2 pkg list | grep -E 'il_interfaces|il_data_collection|il_webserver_bridge|il_inference|il_pipeline_bringup'
+
+  # ── Python lint ────────────────────────────────────────────────────────────
+  lint:
+    name: Python lint (flake8)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install flake8
+        run: pip install flake8
+
+      - name: Lint ROS2 nodes
+        run: |
+          flake8 ros2_ws/src/ \
+            --max-line-length=100 \
+            --extend-ignore=E501,W503 \
+            --exclude=ros2_ws/src/il_interfaces
+
+      - name: Lint training scripts
+        run: |
+          flake8 training/ tools/ \
+            --max-line-length=100 \
+            --extend-ignore=E501,W503
