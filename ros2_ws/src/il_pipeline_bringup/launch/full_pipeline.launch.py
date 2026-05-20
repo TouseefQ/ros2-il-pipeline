@@ -62,6 +62,14 @@ def generate_launch_description():
         output="screen",
     )
 
+    panda_ik_ws = Node(
+        package="il_webserver_bridge",
+        executable="panda_ik_ws_node",
+        name="panda_ik_ws",
+        parameters=[config_file],
+        output="screen",
+    )
+
     # ── Inference node (optional — no-ops if no checkpoint given) ─────────────
     inference = Node(
         package="il_inference",
@@ -99,5 +107,6 @@ def generate_launch_description():
         collection,
         teleop_bridge,
         webserver_actions,
+        panda_ik_ws,
         inference,
     ])

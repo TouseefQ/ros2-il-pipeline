@@ -23,7 +23,7 @@ jobs:
             python3-pip \
             ros-humble-moveit-resources-panda-moveit-config \
             ros-humble-moveit-resources-panda-description
-          pip3 install --quiet websocket-client h5py
+          pip3 install --quiet websocket-client h5py websockets
 
       - name: Build workspace
         shell: bash
