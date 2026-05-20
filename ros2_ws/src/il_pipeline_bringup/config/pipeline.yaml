@@ -44,6 +44,12 @@ il_pipeline:
 
   inference:
     default_checkpoint: ""
-    default_algorithm: "bc"   # "bc" | "act" | "diffusion"
+    default_algorithm: "bc"   # "bc" | "act"
     control_hz: 10.0
     action_chunk_size: 10     # ACT: number of steps predicted per forward pass
+    # Absolute path to the training/ directory so the inference node can import
+    # model and dataset classes at runtime. Set via launch arg or edit here.
+    training_src_dir: ""
+    # Panda joint position limits [radians] — used to clamp policy output
+    joint_limits_lower: [-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973]
+    joint_limits_upper: [ 2.8973,  1.7628,  2.8973, -0.0698,  2.8973,  3.7525,  2.8973]
