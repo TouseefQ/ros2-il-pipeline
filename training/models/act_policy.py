@@ -16,7 +16,6 @@ import math
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 def _sinusoidal_pe(seq_len: int, d_model: int, device: torch.device) -> torch.Tensor:

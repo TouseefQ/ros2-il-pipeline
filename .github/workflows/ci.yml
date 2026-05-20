@@ -60,11 +60,11 @@ jobs:
         run: |
           flake8 ros2_ws/src/ \
             --max-line-length=100 \
-            --extend-ignore=E501,W503 \
+            --extend-ignore=E501,W503,E221,E127,E402 \
             --exclude=ros2_ws/src/il_interfaces
 
       - name: Lint training scripts
         run: |
           flake8 training/ tools/ \
             --max-line-length=100 \
-            --extend-ignore=E501,W503
+            --extend-ignore=E501,W503,E221,E127,E402

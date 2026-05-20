@@ -27,7 +27,6 @@ try:
     import matplotlib.pyplot as plt
     import matplotlib.gridspec as gridspec
     from matplotlib.animation import FuncAnimation
-    import numpy as np
     _MPL_AVAILABLE = True
 except ImportError:
     _MPL_AVAILABLE = False

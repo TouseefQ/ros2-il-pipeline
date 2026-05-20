@@ -223,7 +223,7 @@ def export(
     }
     (meta_dir / 'stats.json').write_text(json.dumps(stats, indent=2))
 
-    print(f'\nDone.')
+    print('\nDone.')
     print(f'  episodes : {len(episodes)}')
     print(f'  frames   : {total_frames:,}')
     print(f'  chunks   : {n_chunks}')

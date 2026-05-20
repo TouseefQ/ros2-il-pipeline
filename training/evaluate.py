@@ -22,7 +22,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
-    args = parse_args()
+    parse_args()
     # TODO Stage 6+: load policy, run on each eval episode,
     #                report MSE, action error, per-joint breakdown
     raise NotImplementedError('evaluate.py — implemented in Stage 6+')

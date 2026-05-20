@@ -260,7 +260,7 @@ def train(cfg: dict, device: torch.device) -> None:
     if writer:
         writer.close()
 
-    print(f'\nTraining complete.')
+    print('\nTraining complete.')
     print(f'  best val loss : {best_val:.4f}')
     print(f'  checkpoints   : {ckpt_dir.resolve()}')
 
