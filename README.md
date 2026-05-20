@@ -247,7 +247,7 @@ Without the webserver, all nodes work standalone via direct ROS2 service calls (
 | 3 | Webserver bridge — IK WS client, HTTP control panel | ✅ Done |
 | 4 | Dataset tooling — viewer, stats, LeRobot export | ✅ Done |
 | 5 | BC training — dataset loader, policy, training loop | ✅ Done |
-| 6 | Inference node — policy loader, control loop | ⏳ Pending |
+| 6 | Inference node — policy loader, control loop | ✅ Done |
 | 7 | ACT training — transformer model, chunked prediction | ⏳ Pending |
 | 8 | Integration & demo | ⏳ Pending |
 
@@ -269,6 +269,9 @@ Without the webserver, all nodes work standalone via direct ROS2 service calls (
 | `/data_collector/start_recording` | `il_interfaces/srv/StartRecording` | srv |
 | `/data_collector/stop_recording` | `il_interfaces/srv/StopRecording` | srv |
 | `/il_inference/load_policy` | `il_interfaces/srv/LoadPolicy` | srv |
+| `/il/autonomous_mode` | `std_msgs/Bool` | in — enables continuous policy control |
+| `/il/emergency_stop` | `std_msgs/Bool` | in — latching halt of autonomous motion |
+| `/il_inference/run_episode` | `il_interfaces/action/RunEpisode` | action |
 
 ---
 
