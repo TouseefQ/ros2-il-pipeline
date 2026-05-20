@@ -39,7 +39,7 @@ jobs:
         run: |
           . /opt/ros/humble/setup.bash
           . ros2_ws/install/setup.bash
-          ros2 pkg list | grep -E 'il_interfaces|il_data_collection|il_webserver_bridge|il_inference|il_pipeline_bringup'
+          ros2 pkg list | grep -E 'a2_interface|il_interfaces|il_data_collection|il_webserver_bridge|il_inference|il_pipeline_bringup'
 
   # ── Python lint ────────────────────────────────────────────────────────────
   lint:

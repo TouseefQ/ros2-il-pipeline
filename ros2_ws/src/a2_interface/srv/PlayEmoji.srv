@@ -1,0 +1,6 @@
+int32 emoji_id
+int32 mode
+int32 priority
+---
+bool success
+string message
