@@ -32,7 +32,7 @@
         ik_ws_port: 9001
         action_server_port: 9010
         username: "admin"
-        password: "mybotshop"
+        password: "illeon"
         reconnect_interval_s: 5.0
         gripper_max_position: 0.04
 
