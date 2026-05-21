@@ -25,6 +25,11 @@ def generate_launch_description():
             default_value="bc",
             description="Policy algorithm: bc | act | diffusion",
         ),
+        DeclareLaunchArgument(
+            "training_src_dir",
+            default_value="",
+            description="Absolute path to training/ directory for policy class imports",
+        ),
 
         Node(
             package="il_inference",
@@ -33,7 +38,10 @@ def generate_launch_description():
             parameters=[config_file, {
                 "checkpoint": LaunchConfiguration("checkpoint"),
                 "algorithm": LaunchConfiguration("algorithm"),
+                "il_pipeline.inference.training_src_dir":
+                    LaunchConfiguration("training_src_dir"),
             }],
             output="screen",
+            remappings=[('/joint_commands', '/panda_arm_controller/joint_trajectory')],
         ),
     ])

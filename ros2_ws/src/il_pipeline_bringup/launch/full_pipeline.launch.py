@@ -52,6 +52,7 @@ def generate_launch_description():
         name="teleop_bridge",
         parameters=[config_file],
         output="screen",
+        remappings=[('/joint_commands', '/panda_arm_controller/joint_trajectory')],
     )
 
     webserver_actions = Node(
@@ -82,6 +83,7 @@ def generate_launch_description():
                 LaunchConfiguration("training_src_dir"),
         }],
         output="screen",
+        remappings=[('/joint_commands', '/panda_arm_controller/joint_trajectory')],
     )
 
     return LaunchDescription([

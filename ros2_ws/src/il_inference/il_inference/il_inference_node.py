@@ -388,8 +388,9 @@ class ILInferenceNode(Node):
                 'Policy predict failed: %s' % exc, throttle_duration_sec=2.0)
             return False
 
-        action = np.clip(action, self._jlim_lo[:len(action)], self._jlim_hi[:len(action)])
-        self._publish_joint_trajectory(action)
+        target = joint_pos + action
+        target = np.clip(target, self._jlim_lo[:len(target)], self._jlim_hi[:len(target)])
+        self._publish_joint_trajectory(target)
         return True
 
     def _publish_joint_trajectory(self, positions: np.ndarray) -> None:
