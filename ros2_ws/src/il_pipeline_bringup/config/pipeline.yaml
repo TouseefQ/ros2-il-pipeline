@@ -21,7 +21,7 @@
         num_joints: 7
 
       data_collection:
-        output_dir: "/data/episodes"
+        output_dir: "/workspace/data/episodes"
         record_images: false
         recording_hz: 10.0
         max_episode_steps: 500
@@ -37,7 +37,7 @@
         gripper_max_position: 0.04
 
       inference:
-        default_checkpoint: ""
+        default_checkpoint: "/workspace/data/models/best.pt"
         default_algorithm: "bc"
         control_hz: 10.0
         action_chunk_size: 10
