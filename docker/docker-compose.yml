@@ -61,6 +61,7 @@ services:
     working_dir: /workspace
     environment:
       - PYTHONPATH=/workspace
+    command: python training/train_bc.py --episodes_dir /workspace/data/episodes
     profiles: [training]
 
   # ── Training (GPU — activate with: docker compose --profile training-gpu up)
