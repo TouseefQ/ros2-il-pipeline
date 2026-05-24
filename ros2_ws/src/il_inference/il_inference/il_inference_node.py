@@ -399,7 +399,7 @@ class ILInferenceNode(Node):
         msg.joint_names  = list(self._joint_names)
         pt = JointTrajectoryPoint()
         pt.positions = [float(p) for p in positions]
-        pt.time_from_start = Duration(sec=0, nanosec=100_000_000)  # 100 ms execution window
+        pt.time_from_start = Duration(sec=0, nanosec=300_000_000)  # 300 ms execution window
         msg.points.append(pt)
         self._joint_pub.publish(msg)
 
