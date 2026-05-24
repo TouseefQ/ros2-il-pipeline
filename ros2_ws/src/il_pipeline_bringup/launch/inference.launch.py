@@ -38,8 +38,6 @@ def generate_launch_description():
             parameters=[config_file, {
                 "checkpoint": LaunchConfiguration("checkpoint"),
                 "algorithm": LaunchConfiguration("algorithm"),
-                "il_pipeline.inference.training_src_dir":
-                    LaunchConfiguration("training_src_dir"),
             }],
             output="screen",
             remappings=[('/joint_commands', '/panda_arm_controller/joint_trajectory')],
