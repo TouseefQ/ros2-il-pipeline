@@ -109,114 +109,139 @@ ros2-il-pipeline/
 
 ---
 
-## Quick Start
+## End-to-End Workflow (Docker)
 
-### 1. Clone and set up
+All commands below run from the **project root** (`~/ros2-il-pipeline`), not from inside `docker/`.
+
+### Step 1 — Clone and prepare data directories
 
 ```bash
 git clone https://github.com/TouseefQ/ros2-il-pipeline.git
 cd ros2-il-pipeline
+mkdir -p data/episodes data/models
 ```
 
-### 2. Run with Docker (recommended)
+### Step 2 — Build Docker images
 
 ```bash
-cd docker
-
-# Build images
-docker compose build
-
-# Start simulator + collection stack
-docker compose up simulator runtime
-
-# (separate terminal) Start full pipeline including webserver bridge
-docker compose up
+docker compose -f docker/docker-compose.yml build
 ```
 
-### 3. Run natively (ROS2 Humble required)
+### Step 3 — Start the runtime stack
 
 ```bash
-# Build workspace
-cd ros2_ws
-source /opt/ros/humble/setup.bash
-colcon build --symlink-install
-source install/setup.bash
-
-# Launch simulator (MoveIt2 Panda on fake hardware)
-ros2 launch il_pipeline_bringup sim.launch.py
-
-# Launch data collection stack
-ros2 launch il_pipeline_bringup collection.launch.py
-
-# Start recording an episode
-ros2 service call /data_collector/start_recording \
-  il_interfaces/srv/StartRecording \
-  "{episode_id: '', collection_mode: 'teleop', record_images: false}"
-
-# Stop and save
-ros2 service call /data_collector/stop_recording \
-  il_interfaces/srv/StopRecording "{save: true}"
+docker compose -f docker/docker-compose.yml up
 ```
 
-### 4. Train
+This starts: MoveIt2 Panda simulator · RViz2 · MoveGroup · ros2_control · data collector · dataset manager · webserver bridge · inference node · IL Pipeline Control panel.
+
+Wait for the log line:
+```
+[il_inference_node-14] [INFO] [...] [il_inference]: ILInferenceNode ready  joints=7  hz=10.0
+```
+
+> **Note:** Every time RViz2 opens, add the Motion Planning panel manually:
+> **Panels → Add New Panel → MotionPlanning** — this is required for the arm to respond to trajectory commands.
+
+### Step 4 — Collect demonstration episodes
+
+1. Open **http://localhost:9010** (IL Pipeline Control) in a browser
+2. Use the **Start Recording** button to begin an episode
+3. Move the arm in RViz2 using the Motion Planning panel (drag the end-effector ball, then click **Plan & Execute**)
+4. Click **Stop & Save** when done
+5. Repeat for at least 20 episodes — more is better
+
+Episodes are saved to `data/episodes/` on the host as `.hdf5` files.
+
+### Step 5 — Train a BC policy
+
+Open a **second terminal** and run:
 
 ```bash
-cd training
-pip install -r requirements.txt
-
-# Behavior Cloning (state-only MLP, default)
-python train_bc.py --config configs/bc_config.yaml \
-                   --episodes_dir ../data/episodes/
-
-# Override checkpoint directory
-python train_bc.py --episodes_dir ../data/episodes/ \
-                   --checkpoint_dir ../data/models/
-
-# ACT (Stage 7)
-python train_act.py --episodes_dir ../data/episodes/
+docker compose -f docker/docker-compose.yml --profile training run --rm training \
+  python training/train_bc.py \
+  --config /workspace/training/configs/bc_config.yaml
 ```
 
-Checkpoints are saved to `data/models/` as `best.pt`, `epoch_NNNN.pt`, and `final.pt`.
-Each checkpoint bundles the normalizer so the inference node needs no training data at runtime.
+Training runs for 100 epochs by default. When complete, `data/models/best.pt` will be on the host.
 
-### 5. Run inference
+### Step 6 — Run inference (autonomous arm control)
+
+The runtime stack from Step 3 must still be running. The inference node auto-loads `data/models/best.pt` at startup — if you just trained, restart the stack first so it picks up the new checkpoint:
 
 ```bash
-ros2 launch il_pipeline_bringup inference.launch.py \
-  checkpoint:=/data/models/bc_v1.pt algorithm:=bc
+# Press Ctrl+C to stop, then:
+docker compose -f docker/docker-compose.yml up
 ```
 
-### 6. Run full pipeline (all nodes in one command)
+In a second terminal, stop the teleop nodes (they flood the arm controller and block inference):
 
 ```bash
-# Collection mode — no policy loaded yet
-ros2 launch il_pipeline_bringup full_pipeline.launch.py
-
-# With a trained BC policy auto-loaded
-ros2 launch il_pipeline_bringup full_pipeline.launch.py \
-  checkpoint:=/data/models/best.pt \
-  algorithm:=bc \
-  training_src_dir:=/path/to/ros2-il-pipeline/training
-
-# With ACT policy
-ros2 launch il_pipeline_bringup full_pipeline.launch.py \
-  checkpoint:=/data/models/act_best.pt \
-  algorithm:=act \
-  training_src_dir:=/path/to/ros2-il-pipeline/training
+docker exec ros2-il-pipeline-ros-1 pkill -f teleop_bridge_node
+docker exec ros2-il-pipeline-ros-1 pkill -f panda_ik_ws_node
 ```
 
-This starts: MoveIt2 Panda simulator · data collector · dataset manager ·
-webserver bridge (teleop + HTTP panel) · inference node.
+Enable autonomous mode:
+
+```bash
+docker exec ros2-il-pipeline-ros-1 bash -c \
+  "source /opt/ros/humble/setup.bash && source /workspace/ros2_ws/install/setup.bash && \
+   ros2 topic pub --once /il/autonomous_mode std_msgs/Bool 'data: true'"
+```
+
+The arm will begin moving in RViz2 based on the trained policy.
+
+### Step 7 — Stop autonomous mode
+
+```bash
+docker exec ros2-il-pipeline-ros-1 bash -c \
+  "source /opt/ros/humble/setup.bash && source /workspace/ros2_ws/install/setup.bash && \
+   ros2 topic pub --once /il/autonomous_mode std_msgs/Bool 'data: false'"
+```
+
+Or press `Ctrl+C` in the docker compose terminal to stop everything.
+
+---
+
+## Improving Policy Quality
+
+The quality of autonomous motion depends entirely on the training data:
+
+| Episodes | Expected result |
+|---|---|
+| < 10 | Near-random motion |
+| 20–50 | Rough approximation of demonstrated behaviour |
+| 100+ | Consistent task execution |
+
+To improve: collect more demonstrations → retrain → restart the stack.
+
+---
+
+## Configuration
+
+All pipeline parameters are in `ros2_ws/src/il_pipeline_bringup/config/pipeline.yaml`.
+
+Key settings:
+
+| Parameter | Default | Description |
+|---|---|---|
+| `robot.name` | `panda` | Robot name |
+| `robot.num_joints` | `7` | Number of arm joints |
+| `data_collection.output_dir` | `/workspace/data/episodes` | Where HDF5 episodes are saved |
+| `inference.default_checkpoint` | `/workspace/data/models/best.pt` | Checkpoint loaded at startup |
+| `inference.training_src_dir` | `/workspace/training` | Path to training source (needed for policy imports) |
+| `inference.control_hz` | `10.0` | Policy inference rate |
+| `webserver.port` | `9000` | Robotic Webserver UI port |
+| `webserver.action_server_port` | `9010` | IL Pipeline Control panel port |
 
 ---
 
 ## Simulator
 
-Development uses **MoveIt2 with the Franka Panda on fake hardware** — no Gazebo required.
-This gives realistic joint states and a full MoveIt2 planning interface via RViz2.
+Development uses **MoveIt2 with the Franka Panda on fake hardware** — no Gazebo required. This gives realistic joint states and a full MoveIt2 planning interface via RViz2.
 
 To swap in a different robot:
-1. Edit `ros2_ws/src/il_pipeline_bringup/config/pipeline.yaml` — update `robot:` section
+1. Edit `pipeline.yaml` — update the `robot:` section
 2. Update `sim.launch.py` to point to the new robot's MoveIt2 config package
 
 ---
@@ -254,9 +279,7 @@ The pipeline integrates with the MyBotShop Robotic Webserver as a **pure client*
 
 **Teleoperation** (`teleop_bridge_node`): connects as a WebSocket client to the IK solver broadcast endpoint (`ws://<host>:9001`). Every joint solution the IK server computes is forwarded to `/joint_commands`; finger/gripper broadcasts are forwarded to `/gripper_command`.
 
-**Pipeline control** (`webserver_action_node`): hosts its own minimal HTTP control panel on port 9010. Open `http://localhost:9010` in a browser tab alongside the webserver UI to start/stop recording, discard an episode, or load a policy checkpoint. No webserver-side modifications are needed — the panel talks directly to ROS2 services.
-
-Without the webserver, all nodes work standalone via direct ROS2 service calls (see Quick Start).
+**Pipeline control** (`webserver_action_node`): hosts its own minimal HTTP control panel on port 9010. Open `http://localhost:9010` in a browser tab to start/stop recording, discard an episode, or load a policy checkpoint.
 
 ---
 
