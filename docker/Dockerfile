@@ -29,7 +29,8 @@ RUN pip3 install --no-cache-dir \
     opencv-python-headless \
     websocket-client \
     pyyaml \
-    scipy \
+    scipy
+RUN pip3 install --no-cache-dir \
     torch --index-url https://download.pytorch.org/whl/cpu
 
 # Webserver Python deps (core web-serving stack; no LLM/STT/TTS)
