@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y \
     ros-humble-rosbag2-storage-default-plugins \
     ros-humble-image-transport \
     ros-humble-cv-bridge \
+    ros-humble-rosbridge-server \
     libopencv-dev \
     && rm -rf /var/lib/apt/lists/*
 
@@ -31,7 +32,22 @@ RUN pip3 install --no-cache-dir \
     scipy \
     torch --index-url https://download.pytorch.org/whl/cpu
 
+# Webserver Python deps (core web-serving stack; no LLM/STT/TTS)
+RUN pip3 install --no-cache-dir \
+    flask \
+    flask-limiter \
+    werkzeug \
+    waitress \
+    Pillow \
+    psutil \
+    requests \
+    pyproj
+
 WORKDIR /ros2_ws
+
+# Webserver workspace source — built at container start-up via entrypoint
+# (must overlay ros2_ws for il_interfaces, so build is deferred to entrypoint)
+COPY robot_webserver /webserver_ws/src/
 
 # Build workspace on first run via entrypoint
 COPY docker/entrypoint.sh /entrypoint.sh

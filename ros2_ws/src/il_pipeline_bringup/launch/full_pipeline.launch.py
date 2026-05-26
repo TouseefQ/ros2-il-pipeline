@@ -1,8 +1,13 @@
 """
-Full pipeline launch: simulator + collection + webserver bridge + inference.
+Full pipeline launch: simulator + collection + webserver + inference.
 
 Covers the complete loop:
   teleoperation → episode collection → (offline training) → inference
+
+The robot_webserver (port 9000 UI + port 9001 IK WebSocket) replaces the
+former panda_ik_ws_node and webserver_action_node:
+  - sim_arm_ik_node handles MoveIt2 IK for the webserver's drag-arm UI
+  - webserver_command_bridge translates webserver button presses to IL service calls
 
 Usage:
   # Collection only (no policy loaded)
@@ -22,11 +27,18 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+import os
 
 
 def generate_launch_description():
     bringup_share = FindPackageShare("il_pipeline_bringup")
     config_file   = PathJoinSubstitution([bringup_share, "config", "pipeline.yaml"])
+
+    # Mirror ROBOT_NS so sim_arm_ik topics align with what ik_ws.py publishes.
+    # With ROBOT_NS unset (sim default): arm_ik_ns = "arm_ik_node"
+    # With ROBOT_NS=robot_unit_0:        arm_ik_ns = "robot_unit_0/arm_ik_node"
+    _robot_ns = os.environ.get('ROBOT_NS', '')
+    arm_ik_ns = f'{_robot_ns}/arm_ik_node'.lstrip('/') if _robot_ns else 'arm_ik_node'
 
     # ── Simulator ─────────────────────────────────────────────────────────────
     sim = IncludeLaunchDescription(
@@ -55,20 +67,28 @@ def generate_launch_description():
         remappings=[('/joint_commands', '/panda_arm_controller/joint_trajectory')],
     )
 
-    webserver_actions = Node(
+    sim_arm_ik = Node(
         package="il_webserver_bridge",
-        executable="webserver_action_node",
-        name="webserver_actions",
+        executable="sim_arm_ik_node",
+        name="arm_ik_node",
+        namespace=arm_ik_ns,
         parameters=[config_file],
         output="screen",
     )
 
-    panda_ik_ws = Node(
+    webserver_cmd_bridge = Node(
         package="il_webserver_bridge",
-        executable="panda_ik_ws_node",
-        name="panda_ik_ws",
+        executable="webserver_command_bridge",
+        name="webserver_command_bridge",
         parameters=[config_file],
         output="screen",
+    )
+
+    # ── Robot webserver (port 9000 UI + port 9001 IK WebSocket) ──────────────
+    webserver = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([
+            PathJoinSubstitution([bringup_share, "launch", "webserver.launch.py"])
+        ])
     )
 
     # ── Inference node (optional — no-ops if no checkpoint given) ─────────────
@@ -106,7 +126,8 @@ def generate_launch_description():
         sim,
         collection,
         teleop_bridge,
-        webserver_actions,
-        panda_ik_ws,
+        sim_arm_ik,
+        webserver_cmd_bridge,
+        webserver,
         inference,
     ])

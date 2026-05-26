@@ -17,6 +17,8 @@ setup(
             'teleop_bridge_node = il_webserver_bridge.teleop_bridge_node:main',
             'webserver_action_node = il_webserver_bridge.webserver_action_node:main',
             'panda_ik_ws_node = il_webserver_bridge.panda_ik_ws_node:main',
+            'sim_arm_ik_node = il_webserver_bridge.sim_arm_ik_node:main',
+            'webserver_command_bridge = il_webserver_bridge.webserver_command_bridge:main',
         ],
     },
 )
