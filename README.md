@@ -12,6 +12,8 @@ Teleoperation → Episode Collection → HDF5 Dataset → Training (BC / ACT) �
 
 ## Architecture
 
+> **Note:** The MyBotShop Robotic Webserver was not available during development. `panda_ik_ws_node` served as a simulation stand-in, broadcasting MoveIt2-planned joint positions on port 9001 in its place.
+
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                MyBotShop Robotic Webserver                   │
