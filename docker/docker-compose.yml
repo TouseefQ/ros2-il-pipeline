@@ -24,6 +24,7 @@ services:
     network_mode: host
     environment:
       - ROS_DOMAIN_ID=0
+      - PYTHONPATH=/workspace/training
     volumes:
       - ../ros2_ws/src:/ros2_ws/src:ro
       - ../data:/data
