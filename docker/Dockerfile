@@ -28,7 +28,8 @@ RUN pip3 install --no-cache-dir \
     opencv-python-headless \
     websocket-client \
     pyyaml \
-    scipy \
+    scipy
+RUN pip3 install --no-cache-dir \
     torch --index-url https://download.pytorch.org/whl/cpu
 
 WORKDIR /ros2_ws
