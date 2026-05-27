@@ -21,7 +21,7 @@
         num_joints: 7
 
       data_collection:
-        output_dir: "/workspace/data/episodes"
+        output_dir: "/data/episodes"
         record_images: false
         recording_hz: 10.0
         max_episode_steps: 500
