@@ -37,7 +37,7 @@ try:
     from cv_bridge import CvBridge
     import cv2
     _CV_AVAILABLE = True
-except ImportError:
+except (ImportError, AttributeError):
     _CV_AVAILABLE = False
 
 
