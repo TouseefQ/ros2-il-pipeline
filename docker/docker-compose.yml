@@ -1,6 +1,6 @@
 services:
 
-  # ── ROS2 runtime: data collection + webserver bridge ──────────────────────
+  # ── Full pipeline: simulator + collection + webserver bridge ─────────────
   runtime:
     build:
       context: ..
@@ -16,21 +16,7 @@ services:
       - ../data:/data
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
     command: >
-      bash -c "ros2 launch il_pipeline_bringup collection.launch.py"
-
-  # ── Simulator (MoveIt2 Panda on fake hardware + RViz2) ────────────────────
-  simulator:
-    image: ros2-il-pipeline:humble
-    depends_on: [runtime]
-    network_mode: host
-    environment:
-      - ROS_DOMAIN_ID=0
-      - DISPLAY=${DISPLAY:-:0}
-    volumes:
-      - ../ros2_ws/src:/ros2_ws/src:ro
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-    command: >
-      bash -c "ros2 launch il_pipeline_bringup sim.launch.py"
+      bash -c "ros2 launch il_pipeline_bringup full_pipeline.launch.py"
 
   # ── Inference ─────────────────────────────────────────────────────────────
   inference:
