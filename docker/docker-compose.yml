@@ -10,12 +10,13 @@ services:
     privileged: true
     environment:
       - ROS_DOMAIN_ID=0
-      - ROS_LOCALHOST_ONLY=1
+      - FASTRTPS_DEFAULT_PROFILES_FILE=/fastdds_localhost.xml
       - DISPLAY=${DISPLAY:-:0}
     volumes:
       - ../ros2_ws/src:/ros2_ws/src:ro
       - ../data:/data
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ./fastdds_localhost.xml:/fastdds_localhost.xml:ro
     command: >
       bash -c "ros2 launch il_pipeline_bringup full_pipeline.launch.py"
 
@@ -25,12 +26,13 @@ services:
     network_mode: host
     environment:
       - ROS_DOMAIN_ID=0
-      - ROS_LOCALHOST_ONLY=1
+      - FASTRTPS_DEFAULT_PROFILES_FILE=/fastdds_localhost.xml
       - PYTHONPATH=/workspace/training
     volumes:
       - ../ros2_ws/src:/ros2_ws/src:ro
       - ../data:/data
       - ../training:/workspace/training:ro
+      - ./fastdds_localhost.xml:/fastdds_localhost.xml:ro
     command: >
       bash -c "ros2 launch il_pipeline_bringup inference.launch.py
         checkpoint:=/data/models/best.pt
