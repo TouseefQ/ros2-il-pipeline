@@ -1,17 +1,10 @@
 """
-Full pipeline launch: simulator + collection + webserver bridge + inference.
+Full pipeline launch: simulator + collection + webserver bridge.
 
-Covers the complete loop:
-  teleoperation → episode collection → (offline training) → inference
+Inference runs in a separate container via the inference docker-compose profile.
 
 Usage:
-  # Collection only (no policy loaded)
   ros2 launch il_pipeline_bringup full_pipeline.launch.py
-
-  # With a trained policy auto-loaded
-  ros2 launch il_pipeline_bringup full_pipeline.launch.py \\
-      checkpoint:=/data/models/best.pt algorithm:=bc \\
-      training_src_dir:=/path/to/ros2-il-pipeline/training
 
   # With image recording enabled
   ros2 launch il_pipeline_bringup full_pipeline.launch.py record_images:=true
@@ -71,42 +64,14 @@ def generate_launch_description():
         output="screen",
     )
 
-    # ── Inference node (optional — no-ops if no checkpoint given) ─────────────
-    inference = Node(
-        package="il_inference",
-        executable="il_inference_node",
-        name="il_inference",
-        parameters=[config_file, {
-            "checkpoint":    LaunchConfiguration("checkpoint"),
-            "algorithm":     LaunchConfiguration("algorithm"),
-        }],
-        output="screen",
-        remappings=[('/joint_commands', '/panda_arm_controller/joint_trajectory')],
-    )
-
     return LaunchDescription([
         DeclareLaunchArgument(
             "record_images", default_value="false",
             description="Include camera images in collected episodes",
-        ),
-        DeclareLaunchArgument(
-            "checkpoint", default_value="",
-            description="Absolute path to a trained policy checkpoint (.pt). "
-                        "Leave empty to skip auto-loading.",
-        ),
-        DeclareLaunchArgument(
-            "algorithm", default_value="bc",
-            description="Policy algorithm matching the checkpoint: bc | act",
-        ),
-        DeclareLaunchArgument(
-            "training_src_dir", default_value="",
-            description="Absolute path to the training/ directory so the inference "
-                        "node can import model classes at runtime.",
         ),
         sim,
         collection,
         teleop_bridge,
         webserver_actions,
         panda_ik_ws,
-        inference,
     ])
