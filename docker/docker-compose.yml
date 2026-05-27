@@ -11,12 +11,17 @@ services:
     environment:
       - ROS_DOMAIN_ID=0
       - DISPLAY=${DISPLAY:-:0}
+      - PYTHONPATH=/workspace/training
     volumes:
       - ../ros2_ws/src:/ros2_ws/src:ro
       - ../data:/data
+      - ../training:/workspace/training:ro
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
     command: >
-      bash -c "ros2 launch il_pipeline_bringup full_pipeline.launch.py"
+      bash -c "ros2 launch il_pipeline_bringup full_pipeline.launch.py
+        checkpoint:=/data/models/best.pt
+        algorithm:=bc
+        training_src_dir:=/workspace/training"
 
   # ── Inference ─────────────────────────────────────────────────────────────
   inference:
