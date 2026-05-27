@@ -10,6 +10,7 @@ services:
     privileged: true
     environment:
       - ROS_DOMAIN_ID=0
+      - ROS_LOCALHOST_ONLY=1
       - DISPLAY=${DISPLAY:-:0}
     volumes:
       - ../ros2_ws/src:/ros2_ws/src:ro
@@ -24,6 +25,7 @@ services:
     network_mode: host
     environment:
       - ROS_DOMAIN_ID=0
+      - ROS_LOCALHOST_ONLY=1
       - PYTHONPATH=/workspace/training
     volumes:
       - ../ros2_ws/src:/ros2_ws/src:ro
