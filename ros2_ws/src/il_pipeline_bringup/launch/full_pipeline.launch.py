@@ -14,9 +14,8 @@ Usage:
 """
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
@@ -42,7 +41,7 @@ def generate_launch_description():
         }.items(),
     )
 
-    # ── Inference node (only launched when checkpoint is provided) ────────────
+    # ── Inference node ────────────────────────────────────────────────────────
     inference = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             PathJoinSubstitution([bringup_share, "launch", "inference.launch.py"])
@@ -52,9 +51,6 @@ def generate_launch_description():
             "algorithm":         LaunchConfiguration("algorithm"),
             "training_src_dir":  LaunchConfiguration("training_src_dir"),
         }.items(),
-        condition=IfCondition(
-            PythonExpression(["'", LaunchConfiguration("checkpoint"), "' != ''"])
-        ),
     )
 
     # ── Webserver bridge ──────────────────────────────────────────────────────
