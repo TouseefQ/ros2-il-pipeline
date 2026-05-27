@@ -47,7 +47,7 @@ from .policy_loader import PolicyLoader
 try:
     from cv_bridge import CvBridge
     _CV_AVAILABLE = True
-except ImportError:
+except (ImportError, AttributeError):
     _CV_AVAILABLE = False
 
 
