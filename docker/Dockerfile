@@ -29,6 +29,7 @@ RUN pip3 install --no-cache-dir \
     numpy \
     opencv-python-headless \
     websocket-client \
+    websockets \
     pyyaml \
     scipy
 RUN pip3 install --no-cache-dir \
