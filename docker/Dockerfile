@@ -18,6 +18,8 @@ RUN apt-get update && apt-get install -y \
     ros-humble-rosbag2-storage-default-plugins \
     ros-humble-image-transport \
     ros-humble-cv-bridge \
+    ros-humble-ros2-control \
+    ros-humble-ros2-controllers \
     libopencv-dev \
     && rm -rf /var/lib/apt/lists/*
 
