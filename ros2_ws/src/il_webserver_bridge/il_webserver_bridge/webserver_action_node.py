@@ -73,9 +73,9 @@ _HTML_PANEL = """\
     </select>
   </label>
   <label><input type="checkbox" id="rec_img"> Record images</label>
-  <button onclick="startRecording()">Start Recording</button>
-  <button onclick="stopRecording()">Stop &amp; Save</button>
-  <button onclick="discardEpisode()">Discard Episode</button>
+  <button id="btn_start"   onclick="startRecording()">Start Recording</button>
+  <button id="btn_stop"    onclick="stopRecording()"  disabled>Stop &amp; Save</button>
+  <button id="btn_discard" onclick="discardEpisode()" disabled>Discard Episode</button>
 </div>
 
 <div class="section">
@@ -97,6 +97,11 @@ _HTML_PANEL = """\
 </div>
 
 <script>
+function setRecording(active) {
+  document.getElementById('btn_start').disabled   =  active;
+  document.getElementById('btn_stop').disabled    = !active;
+  document.getElementById('btn_discard').disabled = !active;
+}
 async function post(url, body) {
   const r = await fetch(url, {
     method: 'POST',
@@ -109,17 +114,24 @@ function show(data) {
   document.getElementById('status').textContent = JSON.stringify(data, null, 2);
 }
 async function startRecording() {
-  show(await post('/start_recording', {
+  setRecording(true);
+  const data = await post('/start_recording', {
     episode_id: document.getElementById('ep_id').value,
     collection_mode: document.getElementById('mode').value,
     record_images: document.getElementById('rec_img').checked
-  }));
+  });
+  if (!data.success) setRecording(false);
+  show(data);
 }
 async function stopRecording() {
-  show(await post('/stop_recording', {}));
+  const data = await post('/stop_recording', {});
+  setRecording(false);
+  show(data);
 }
 async function discardEpisode() {
-  show(await post('/discard_episode', {}));
+  const data = await post('/discard_episode', {});
+  setRecording(false);
+  show(data);
 }
 async function loadPolicy() {
   show(await post('/load_policy', {
