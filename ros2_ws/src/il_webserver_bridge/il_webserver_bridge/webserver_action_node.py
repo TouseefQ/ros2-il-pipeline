@@ -1,6 +1,7 @@
 """
 WebserverActionNode — self-hosted HTTP control panel (port 9010) for
-pipeline control (start/stop recording, load policy, discard episode).
+pipeline control (start/stop recording, load policy, discard episode,
+enable/disable autonomous mode).
 
 Since the MyBotShop webserver exposes no extension hooks for external action
 triggers, this node runs its own minimal HTTP server that the operator opens
@@ -12,9 +13,11 @@ HTTP endpoints:
   POST /stop_recording     — saves and stops the active episode
   POST /discard_episode    — stops and discards (no HDF5 written)
   POST /load_policy        — body JSON: {"checkpoint_path":"...","algorithm":"bc"}
+  POST /autonomous_mode    — body JSON: {"enabled": true|false}
 
 All POST handlers block until the ROS2 service call completes (up to
 ACTION_TIMEOUT_S seconds) then return a JSON response body.
+/autonomous_mode publishes immediately and returns without blocking.
 
 Service clients:
   /data_collector/start_recording  (StartRecording)
@@ -23,6 +26,7 @@ Service clients:
 
 Publishes:
   /il/pipeline_control   std_msgs/String  (JSON status after every action)
+  /il/autonomous_mode    std_msgs/Bool    (enable/disable inference control loop)
 """
 
 from __future__ import annotations
@@ -35,7 +39,7 @@ from typing import Any
 
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import String
+from std_msgs.msg import Bool, String
 
 from il_interfaces.srv import StartRecording, StopRecording, LoadPolicy
 
@@ -92,6 +96,12 @@ _HTML_PANEL = """\
 </div>
 
 <div class="section">
+  <h2>Autonomous Mode</h2>
+  <button id="btn_auto_on"  onclick="setAutonomous(true)"  style="background:#d4edda">Enable Autonomous</button>
+  <button id="btn_auto_off" onclick="setAutonomous(false)" style="background:#f8d7da" disabled>Disable Autonomous</button>
+</div>
+
+<div class="section">
   <h2>Status</h2>
   <pre id="status">—</pre>
 </div>
@@ -138,6 +148,11 @@ async function loadPolicy() {
     checkpoint_path: document.getElementById('ckpt_path').value,
     algorithm: document.getElementById('algo').value
   }));
+}
+async function setAutonomous(enabled) {
+  document.getElementById('btn_auto_on').disabled  =  enabled;
+  document.getElementById('btn_auto_off').disabled = !enabled;
+  show(await post('/autonomous_mode', {enabled: enabled}));
 }
 </script>
 </body>
@@ -214,6 +229,7 @@ class WebserverActionNode(Node):
 
         # ── Publisher ────────────────────────────────────────────────────────
         self._status_pub = self.create_publisher(String, '/il/pipeline_control', 10)
+        self._autonomous_pub = self.create_publisher(Bool, '/il/autonomous_mode', 10)
 
         # ── Thread-safe queue drained by ROS2 timer ──────────────────────────
         self._action_queue: queue.Queue = queue.Queue()
@@ -243,6 +259,8 @@ class WebserverActionNode(Node):
             self._call_stop_recording(save=False, ev=ev, result=result)
         elif action == 'load_policy':
             self._call_load_policy(params, ev, result)
+        elif action == 'autonomous_mode':
+            self._call_autonomous_mode(params, ev, result)
         else:
             result[0] = {'success': False, 'message': 'unknown action: %s' % action}
             ev.set()
@@ -313,6 +331,16 @@ class WebserverActionNode(Node):
             ev.set()
 
         future.add_done_callback(_done)
+
+    def _call_autonomous_mode(self, params: dict, ev: threading.Event, result: list) -> None:
+        enabled = bool(params.get('enabled', False))
+        msg = Bool()
+        msg.data = enabled
+        self._autonomous_pub.publish(msg)
+        r = {'success': True, 'message': 'autonomous_mode=%s' % enabled}
+        self._publish_status(r)
+        result[0] = r
+        ev.set()
 
     # ── Helpers ───────────────────────────────────────────────────────────────
 

@@ -37,7 +37,7 @@
         gripper_max_position: 0.04
 
       inference:
-        default_checkpoint: "/workspace/data/models/best.pt"
+        default_checkpoint: "/data/models/best.pt"
         default_algorithm: "bc"
         control_hz: 10.0
         action_chunk_size: 10

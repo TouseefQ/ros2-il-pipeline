@@ -27,12 +27,12 @@ services:
     volumes:
       - ../ros2_ws/src:/ros2_ws/src:ro
       - ../data:/data
-      - ../training:/training:ro
+      - ../training:/workspace/training:ro
     command: >
       bash -c "ros2 launch il_pipeline_bringup inference.launch.py
         checkpoint:=/data/models/best.pt
         algorithm:=bc
-        training_src_dir:=/training"
+        training_src_dir:=/workspace/training"
     profiles: [inference]
 
   # ── Training (CPU — default) ───────────────────────────────────────────────
