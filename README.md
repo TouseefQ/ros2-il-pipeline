@@ -176,29 +176,32 @@ The runtime stack from Step 3 must still be running. The inference node auto-loa
 docker compose -f docker/docker-compose.yml up
 ```
 
-In a second terminal, stop the teleop nodes (they flood the arm controller and block inference):
+Enable autonomous mode via the control panel:
+
+1. Open **http://localhost:9010** and click **Enable Autonomous**
+
+Or from the terminal:
 
 ```bash
-docker exec ros2-il-pipeline-ros-1 pkill -f teleop_bridge_node
-docker exec ros2-il-pipeline-ros-1 pkill -f panda_ik_ws_node
+docker exec -it docker-runtime-1 bash -c \
+  "source /opt/ros/humble/setup.bash && \
+   source /ros2_ws/install/setup.bash && \
+   ros2 topic pub --times 3 /il/autonomous_mode std_msgs/Bool '{data: true}'"
 ```
 
-Enable autonomous mode:
-
-```bash
-docker exec ros2-il-pipeline-ros-1 bash -c \
-  "source /opt/ros/humble/setup.bash && source /workspace/ros2_ws/install/setup.bash && \
-   ros2 topic pub --once /il/autonomous_mode std_msgs/Bool 'data: true'"
-```
+> **Note:** `/il/autonomous_mode` is not latched — it resets to `False` on every container restart. You must re-enable it each time you bring the stack up.
 
 The arm will begin moving in RViz2 based on the trained policy.
 
 ### Step 7 — Stop autonomous mode
 
+Click **Disable Autonomous** in the control panel at `http://localhost:9010`, or run:
+
 ```bash
-docker exec ros2-il-pipeline-ros-1 bash -c \
-  "source /opt/ros/humble/setup.bash && source /workspace/ros2_ws/install/setup.bash && \
-   ros2 topic pub --once /il/autonomous_mode std_msgs/Bool 'data: false'"
+docker exec -it docker-runtime-1 bash -c \
+  "source /opt/ros/humble/setup.bash && \
+   source /ros2_ws/install/setup.bash && \
+   ros2 topic pub --times 3 /il/autonomous_mode std_msgs/Bool '{data: false}'"
 ```
 
 Or press `Ctrl+C` in the docker compose terminal to stop everything.
@@ -233,6 +236,7 @@ Key settings:
 | `inference.default_checkpoint` | `/workspace/data/models/best.pt` | Checkpoint loaded at startup |
 | `inference.training_src_dir` | `/workspace/training` | Path to training source (needed for policy imports) |
 | `inference.control_hz` | `10.0` | Policy inference rate |
+| `inference.action_scale` | `1.0` | Scales each predicted action delta (0.5 = half speed; useful for demos) |
 | `webserver.port` | `9000` | Robotic Webserver UI port |
 | `webserver.action_server_port` | `9010` | IL Pipeline Control panel port |
 
