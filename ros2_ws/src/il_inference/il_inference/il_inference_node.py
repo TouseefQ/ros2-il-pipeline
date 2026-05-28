@@ -89,6 +89,7 @@ class ILInferenceNode(Node):
             'il_pipeline.inference.joint_limits_upper',
             [2.8973, 1.7628, 2.8973, -0.0698, 2.8973, 3.7525, 2.8973],
         )
+        self.declare_parameter('il_pipeline.inference.action_scale', 1.0)
         self.declare_parameter('il_pipeline.robot.joint_names', ['joint1'])
         self.declare_parameter('il_pipeline.robot.num_joints', 7)
         self.declare_parameter('il_pipeline.robot.eef_link', 'panda_link8')
@@ -112,6 +113,8 @@ class ILInferenceNode(Node):
         hi = self.get_parameter('il_pipeline.inference.joint_limits_upper').value
         self._jlim_lo = np.array(lo, dtype=np.float32)
         self._jlim_hi = np.array(hi, dtype=np.float32)
+        self._action_scale: float = self.get_parameter(
+            'il_pipeline.inference.action_scale').value
 
         # ── State ────────────────────────────────────────────────────────────
         self._policy: PolicyLoader | None = None
@@ -388,7 +391,7 @@ class ILInferenceNode(Node):
                 'Policy predict failed: %s' % exc, throttle_duration_sec=2.0)
             return False
 
-        target = joint_pos + action
+        target = joint_pos + action * self._action_scale
         target = np.clip(target, self._jlim_lo[:len(target)], self._jlim_hi[:len(target)])
         self._publish_joint_trajectory(target)
         return True

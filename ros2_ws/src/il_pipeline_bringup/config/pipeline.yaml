@@ -44,3 +44,4 @@
         training_src_dir: "/workspace/training"
         joint_limits_lower: [-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973]
         joint_limits_upper: [ 2.8973,  1.7628,  2.8973, -0.0698,  2.8973,  3.7525,  2.8973]
+        action_scale: 0.5
