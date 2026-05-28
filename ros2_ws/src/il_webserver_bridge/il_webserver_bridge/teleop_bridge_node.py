@@ -28,7 +28,7 @@ import time
 import rclpy
 from rclpy.node import Node
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
-from std_msgs.msg import Float32
+from std_msgs.msg import Bool, Float32
 
 try:
     import websocket
@@ -59,6 +59,10 @@ class TeleopBridgeNode(Node):
             JointTrajectory, '/joint_commands', 10)
         self._gripper_pub = self.create_publisher(
             Float32, '/gripper_command', 10)
+
+        # ── Autonomous mode gate ─────────────────────────────────────────────
+        self._autonomous: bool = False
+        self.create_subscription(Bool, '/il/autonomous_mode', self._mode_cb, 10)
 
         # ── WebSocket connection (background thread) ─────────────────────────
         self._connected = False
@@ -97,6 +101,9 @@ class TeleopBridgeNode(Node):
                 'IK WS disconnected — retrying in %.1fs' % interval)
             time.sleep(interval)
 
+    def _mode_cb(self, msg: Bool) -> None:
+        self._autonomous = bool(msg.data)
+
     def _on_open(self, ws) -> None:
         self._connected = True
         self.get_logger().info('IK WebSocket connected')
@@ -126,6 +133,8 @@ class TeleopBridgeNode(Node):
     # ── Message handlers ─────────────────────────────────────────────────────
 
     def _handle_joint_solution(self, msg: dict) -> None:
+        if self._autonomous:
+            return
         names = msg.get('joint_names', [])
         positions = msg.get('joint_positions', [])
         if not names or not positions or len(names) != len(positions):
